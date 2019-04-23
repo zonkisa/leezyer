@@ -1,7 +1,7 @@
 """
 leezyer leetcode lazyer
 """
-from time import perf_counter
+from time import perf_counter_ns
 from collections import deque
 from copy import deepcopy
 
@@ -35,9 +35,9 @@ class Solution:
 
     def _run_solution(self, solution, args, kwargs):
         ags, kws = deepcopy(args), deepcopy(kwargs)
-        t1 = perf_counter()
+        t1 = perf_counter_ns()
         output = solution.__call__(self, *ags, **kws)
-        duration = perf_counter() - t1
+        duration = perf_counter_ns() - t1
         return output, duration
 
     def _post_process(self, solutions, outputs, durations):
