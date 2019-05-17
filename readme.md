@@ -4,7 +4,7 @@
 1. 编写自己的solution
 ```python
 # 617_merge-two-binary-trees.py
-from leeyer import solution, timeit, Solution, make_tree, TreeNode
+from leeyzer import solution, timeit, Solution, make_tree, TreeNode
 
 class Q617(Solution):
     @solution
