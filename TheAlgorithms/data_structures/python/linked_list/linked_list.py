@@ -50,7 +50,7 @@ class Linked_List:
         tmp = self.Head
         ct = 1 if tmp else 0
         print("index is ", ct, "--->", tmp.data)
-        while tmp.next:
+        while tmp.next and tmp.next != self.Head: # tmp.next != self.Head 方便输出循环链表
             ct += 1
             tmp = tmp.next
             print("index is ", ct, "--->", tmp.data)
@@ -62,7 +62,7 @@ class Linked_List:
             return 0
         tmp = self.Head
         ct = 1
-        while tmp.next:
+        while tmp.next and tmp.next != self.Head:
             ct += 1
             tmp = tmp.next
         return ct
@@ -182,7 +182,50 @@ class Linked_List:
             else:
                 node.next = None
 
+    # ------------------------
+    def has_circular(self):
+        """
+        1.3.29 前序准备，判断链表是否有成环情况
+        快慢指针，速度比2:1
+        """
+        if not self.Head:
+            return False
+        fast, slow = self.Head, self.Head
+        while fast and fast.next:
+            fast = fast.next.next
+            slow = slow.next
+            if slow == fast:
+                return True
+        return False
 
+    def is_circular(self):
+        """
+        1.3.29 前序准备，判断是否为环形链表
+        """
+        tmp = self.Head
+        while tmp.next:
+            tmp = tmp.next
+            if tmp == self.Head:
+                return True
+
+        return False
+
+
+def make_circular_list(list):
+    """ 循环链表 """
+    lst = Linked_List()
+    if not lst:
+        lst.Head = None
+    else:
+        pre = Node(list[0])
+        lst.Head = pre
+        for i, value in enumerate(list):
+            if i > 0:
+                curr = Node(list[i])
+                pre.next = curr
+                pre = curr
+        pre.next = lst.Head
+    return lst
 
 
 def make_lst(list):
