@@ -1,6 +1,6 @@
 # coding:utf-8
 from __future__ import print_function
-from TheAlgorithms.data_structures.python.union_find.union_find import QuickFind, QuickUnion, WeightedQuickUnion
+from TheAlgorithms.data_structures.python.union_find.union_find import QuickFind, QuickUnion, WeightedQuickUnion, PathCompressedWeightedQuickUnion
 from time import perf_counter_ns
 
 
@@ -27,7 +27,7 @@ if __name__ == '__main__':
         lines = line.strip("\n").split(" ")
 
         if i == 0:
-            ob = WeightedQuickUnion(int(lines[0]))
+            ob = PathCompressedWeightedQuickUnion(int(lines[0]))
             i += 1
         else:
             ls.append((int(lines[0]), int(lines[1])))

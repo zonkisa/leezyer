@@ -136,3 +136,68 @@ class WeightedQuickUnion:
             self.ids[qRoot] = pRoot
             self.size[pRoot] += self.size[qRoot]
         self.count -= 1
+
+
+class PathCompressedWeightedQuickUnion:
+    """
+    1.5.12 使用路径压缩的加权quick-union
+    要实现路径压缩，需要为find方法添加循环，将路径上的所有节点直接链接到根节点，得到几乎完全扁平的树
+    """
+    def __init__(self, N):
+        if N <= 0:
+            raise ValueError(" N should be greater than 0 ")
+        self.count = N
+        self.ids = list(range(N))
+        self.size = [1] * N
+
+    def find_bad(self, p):
+        """
+        循环将从p到根节点的路径上的每个节点都连接到节点，这里用到两次循环
+        """
+        tmp = p
+        while p != self.ids[p]:
+            p = self.ids[p]
+        pRoot = p
+        p = tmp
+        while pRoot != self.ids[p]:
+            tmp = self.ids[p]
+            self.ids[p] = pRoot
+            p = tmp
+
+        return pRoot
+
+    def find(self, p):
+        """
+        循环将从p到根节点的路径上的每个节点都连接到节点
+        此处路径压缩体现在，更新父节点时，由于p != self.ids[p]，故每次多往前走一部
+        """
+        while p != self.ids[p]:
+            self.ids[p] = self.ids[self.ids[p]]
+            p = self.ids[p]
+
+        return p
+
+    def connected(self, p, v):
+        return self.find(p) == self.find(v)
+
+    # 获取组的数目
+    def count(self):
+        return self.count()
+
+    def union(self, p, q):
+        """
+        分配权重
+        重点在于父节点与权重的更新
+        父节点权重大，则将权重小的父节点指向权重大的父节点，同时更新父节点权重
+        """
+        pRoot = self.find(p)
+        qRoot = self.find(q)
+        if pRoot == qRoot:
+            return
+        elif self.size[pRoot] < self.size[qRoot]:
+            self.ids[pRoot] = qRoot
+            self.size[qRoot] += self.size[pRoot]
+        else:
+            self.ids[qRoot] = pRoot
+            self.size[pRoot] += self.size[qRoot]
+        self.count -= 1
