@@ -104,8 +104,8 @@ class Shell(Example):
 
     官方例子中规模因子为3，关于局部有序性如下：（注意这里的局部有序并不严谨，仅为加深理解）
     由于规模因子为3，初始h会接近N/3附近。
-    先做极端假设的实例，恰好初始h的左侧均大于右侧部分，此时假设初始三部分数据形如[大, 小, 未知]
-    这样第一层外循环在走位"大"部分的数据后，会使得初始h索引两侧的约N/3数据相对有序。即会倾向于[小, 大, 未知]
+    先做极端假设的实例，此时假设初始三部分数据形如[大, 小, 未知],即恰好初始h的左侧均大于右侧部分，
+    这样第一层外循环在走完"大"部分的数据后，会使得初始h索引两侧的约N/3数据相对有序。即会倾向于[小, 大, 未知]
     第一层外循环结束后，h = h/3，此时再关注"小"部分数据，几乎又会重复上述过程。
     经过类似过程完成数组的部分有序
 
@@ -125,5 +125,34 @@ class Shell(Example):
             h = int(h/3)
 
         return collection
+
+
+class Merge(Example):
+    """
+    归并排序：先递归地将大数组分成两半分别排序，然后将子结果归并起来
+
+    优点：将任意长度为N的数组排序所需时间和NlgN成正比
+    理解为树，分裂完成后有n层，对于0~n-1之间自顶向下的第k层，有2^k个子数组，
+    每个数组长度为2^(n-k)，因此归并操作最多每个需要2^(n-k)次比较
+    所以每层需要2^k * 2^(n-k) = 2^n，共n层
+    缺点：所需额外空间与N成正比
+    """
+
+    def sort(self, collection):
+        def merge(left, right):
+            res = []
+            # 若左右有一为空，则剩下不为空的集合中都是已排序的较大的元素，直接添加到尾部即可
+            while left and right:
+                res.append(left.pop(0) if left[0] <= right[0] else right.pop[0])
+            return res + left + right
+
+        if len(collection) <= 1:
+            return collection
+        mid = len(collection) // 2
+
+        return merge(self.sort(collection[:mid]), self.sort(collection[mid:]))
+
+
+
 
 
