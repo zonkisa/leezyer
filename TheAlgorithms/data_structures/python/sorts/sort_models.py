@@ -1,6 +1,8 @@
 # coding:utf-8
 from __future__ import print_function
 from TheAlgorithms.data_structures.python.sorts.sort_example import Example
+from math import log, pow
+import random
 
 
 class Selection(Example):
@@ -40,6 +42,16 @@ class Insertion(Example):
     def sort(self, collection):
         N = len(collection)
         for i in range(1, N):
+            j = i
+            while j > 0 and self.less(collection[j], collection[j-1]):
+                self.exch(collection, j, j-1)
+                j -= 1
+
+        return collection
+
+    def sort_outer(self, collection, lo, hi):
+        N = hi - lo + 1
+        for i in range(lo+1, N):
             j = i
             while j > 0 and self.less(collection[j], collection[j-1]):
                 self.exch(collection, j, j-1)
@@ -122,7 +134,7 @@ class Shell(Example):
                 while j >= h and self.less(collection[j], collection[j - h]):
                     self.exch(collection, j, j-h)
                     j -= h
-            h = int(h/3)
+            h = h//3
 
         return collection
 
@@ -134,16 +146,23 @@ class Merge(Example):
     优点：将任意长度为N的数组排序所需时间和NlgN成正比
     理解为树，分裂完成后有n层，对于0~n-1之间自顶向下的第k层，有2^k个子数组，
     每个数组长度为2^(n-k)，因此归并操作最多每个需要2^(n-k)次比较
-    所以每层需要2^k * 2^(n-k) = 2^n，共n层
+    所以每层需要2^k * 2^(n-k) = 2^n，共n层,即 NlgN次比较
     缺点：所需额外空间与N成正比
+
+    对于长度为N的任意数组，自顶向下的归并排序最多需要访问数组6NlgN次
+
+    每一次归并操作最多需要访问数组6N次（2N次复制、2N次移动、最多2N次比较）
     """
 
     def sort(self, collection):
+        """
+        比较原始的归并排序，每次merge过程前都需要额外空间 res=[]，大小与left、right有关
+        """
         def merge(left, right):
             res = []
             # 若左右有一为空，则剩下不为空的集合中都是已排序的较大的元素，直接添加到尾部即可
             while left and right:
-                res.append(left.pop(0) if left[0] <= right[0] else right.pop[0])
+                res.append(left.pop if left[0] <= right[0] else right.pop)
             return res + left + right
 
         if len(collection) <= 1:
@@ -152,7 +171,400 @@ class Merge(Example):
 
         return merge(self.sort(collection[:mid]), self.sort(collection[mid:]))
 
+    def sort2(self, collection):
+        """
+        原地归并排序，仅需初始复制aux数组
+        """
+        def sort_sup(a, lo, hi):
+            if hi <= lo:
+                return a
+            mid = lo + (hi - lo)//2
+            sort_sup(a, lo, mid)
+            sort_sup(a, mid+1, hi)
+            merge_sup(a, lo, mid, hi)
+
+        def merge_sup(a, lo, mid, hi):
+            i, j = lo, mid + 1
+            # 这里hi是具体的索引，必须要取到，因此在range中hi+1
+            for k in range(lo, hi+1):
+                aux[k] = a[k]
+            for k in range(lo, hi+1):
+                # 左端索引大于mid，说明左边较小的元素已经取完，需要取右半边元素
+                if i > mid:
+                    a[k] = aux[j]
+                    j += 1
+                # 右端索引小于mid，说明右边较小的元素已经取完，需要取左半边元素
+                elif hi < j:
+                    a[k] = aux[i]
+                    i += 1
+                # 左右均有元素，且此时右半区起始值小于左半区起始值，先去较小的索引，即右区
+                elif self.less(aux[j], aux[i]):
+                    a[k] = aux[j]
+                    j += 1
+
+                # 同上
+                else:
+                    a[k] = aux[i]
+                    i += 1
+
+        aux = [0] * len(collection)
+        sort_sup(collection, 0, len(collection)-1)
+
+        return collection
+
+    def sort3(self, collection):
+        """
+        快速归并排序，习题2.2.10
+        改进1：实现一个merge方法，按降序将数组a的后半部分复制到数组aux，然后将其归并回数组a中，无需考虑半区是否取完
+        """
+        def sort_sup(a, lo, hi):
+            if hi <= lo:
+                return a
+            mid = lo + (hi - lo)//2
+            sort_sup(a, lo, mid)
+            sort_sup(a, mid+1, hi)
+            merge_sup(a, lo, mid, hi)
+
+        def merge_sup(a, lo, mid, hi):
+            for k in range(lo, mid+1):
+                aux[k] = a[k]
+            for k in range(mid+1, hi+1):
+                aux[k] = a[hi-k+mid+1] # 取右半区倒序索引
+
+            i, j = lo, hi
+            # 此时i,j都是各自半区最小值的索引。
+            # 由于右半区已经倒序，无论i++或j--都是从两头较小值开始比较，向中间较大值靠拢，消除了半区的界限，mid值也就不重要了。
+            for k in range(lo, hi+1):
+                if self.less(aux[j], aux[i]):
+                    a[k] = aux[j]
+                    j -= 1
+                else:
+                    a[k] = aux[i]
+                    i += 1
+
+        aux = [0] * len(collection)
+        sort_sup(collection, 0, len(collection)-1)
+
+        return collection
+
+    def sort4(self, collection):
+        """
+        改进2：merge前判断数组是否有序  习题2.2.8
+        若a[mid] <= a[mid+1]，则视为已经有序，无需调用merge方法
+        此时归并排序处理一个已经有序的数组所需的比较次数是线性级别的
+        """
+        def sort_sup(a, lo, hi):
+            if hi <= lo:
+                return
+            mid = lo + (hi - lo)//2
+            sort_sup(a, lo, mid)
+            sort_sup(a, mid+1, hi)
+            if self.less(a[mid+1], a[mid]): # 右半区小于左半区时再调用merge
+                merge_sup(a, lo, mid, hi)
+
+        def merge_sup(a, lo, mid, hi):
+            for k in range(lo, mid+1):
+                aux[k] = a[k]
+            for k in range(mid+1, hi+1):
+                aux[k] = a[hi-k+mid+1] # 取右半区倒序索引
+
+            i, j = lo, hi
+            # 此时i,j都是各自半区最小值的索引。
+            # 由于右半区已经倒序，无论i++或j--都是从两头较小值开始比较，向中间较大值靠拢，消除了半区的界限，mid值也就不重要了。
+            for k in range(lo, hi+1):
+                if self.less(aux[j], aux[i]):
+                    a[k] = aux[j]
+                    j -= 1
+                else:
+                    a[k] = aux[i]
+                    i += 1
+
+        aux = [0] * len(collection)
+        sort_sup(collection, 0, len(collection)-1)
+
+        # return collection
+
+    # TODO 未通过压测
+    def sort5(self, collection):
+        """
+        改进3：a,小规模数组使用插入排序;  b,merge前判断数组是否有序；   c,在递归中交换参数避免数组复制
+        小规模的界定：算法第四版归并排序章节的命题G已给出证明，归并最多需要6NlgN次访问数组（2N复制、2N移动交换、最多2N次比较）
+                    插入排序最优N-1次比较+0次交换，见https://yidao620c.iteye.com/blog/1946147
+        对于小规模数组例子，见Quick._sort，官方给出规模因子为5~15，相应地需要更改插入排序的传参，见Insertion._sort_outer
+        习题2.2.11
+        """
+        def sort_sup(a, lo, hi):
+            if hi <= lo:
+                return
+            # if hi - lo <= insertFractor:
+            #     Insertion().sort2(a)
+            #     return
+            mid = lo + (hi - lo)//2
+            sort_sup(a, lo, mid)
+            sort_sup(a, mid+1, hi)
+            if self.less(a[mid+1], a[mid]): # 右半区小于左半区时再调用merge
+                merge_sup(a, lo, mid, hi)
+
+        def merge_sup(a, lo, mid, hi):
+            for k in range(lo, mid+1):
+                aux[k] = a[k]
+            for k in range(mid+1, hi+1):
+                aux[k] = a[hi-k+mid+1] # 取右半区倒序索引
+
+            i, j = lo, hi
+            # 此时i,j都是各自半区最小值的索引。
+            # 由于右半区已经倒序，无论i++或j--都是从两头较小值开始比较，向中间较大值靠拢，消除了半区的界限，mid值也就不重要了。
+            for k in range(lo, hi+1):
+                if self.less(aux[j], aux[i]):
+                    a[k] = aux[j]
+                    j -= 1
+                else:
+                    a[k] = aux[i]
+                    i += 1
+
+        N = len(collection)
+        insertFractor = int(log(N, 2))
+        aux = collection.copy()
+        sort_sup(collection, 0, N-1)
+
+        return collection
 
 
+class Quick(Example):
+    """
+    快速排序：分治，与归并排序互补
+    归并排序将数组分成两个子数组分别排序，并将有序的子数组归并以将整个数组排序。递归调用发生在处理整个数组之前，先递归调用sort_sup
+    快速排序是当两个子数组都有序时，整个数组即有序。递归调用发生在处理整个数组之后，先对整个数组partition，再递归调用_sort
+
+    优点：内循环简洁，比较次数较少
+    缺点：依赖于数组的切分
+    复杂度 k*1.39NlgN, 移动数据的次数比归并少
+    """
+
+    def sort(self, collection):
+        random.shuffle(collection)
+        self._sort(collection, 0, len(collection)-1)
+
+    def _sort(self, a, lo, hi):
+        if hi <= lo + 7:  # 小数组改用插入排序
+            Insertion().sort_outer(a, lo, hi)
+            return
+        j = self._partition(a, lo, hi)
+        self._sort(a, lo, j-1)
+        self._sort(a, j+1, hi)
+
+    def _partition(self, a, lo, hi):
+        i, j = lo, hi+1
+        v = a[lo]
+        while True:
+            i += 1
+            while self.less(a[i], v):
+                if i == hi:
+                    break
+                i += 1
+
+            j -= 1
+            while self.less(v, a[j]):
+                if j == lo:
+                    break
+                j -= 1
+
+            if i >= j:
+                break  # 根据切分数组的值v已经找到v值应该在的索引j (因为i>=j，因此v值取j正好在i索引值之前，保证左右有序)
+            self.exch(a, i, j) # 循环走到这里说明有类似局部极值点的情况，未成功切分数组，需要逐个交换索引，继续循环
+
+        self.exch(a, lo, j) # 更新v值的最终索引
+
+        return j
+
+    def sort2(self, collection):
+        """
+        习题2.3.17 + 2.3.11
+        改进1，设置越界哨兵，在partition中左右边界的判断可以省略
+        改进2，修改切分值左右扫描的判断条件，处理切元素值重复的情况
+        改进3，给出了局部保持随机性的做法
+        """
+        random.shuffle(collection)
+        large_index = collection.index(max(collection))
+        self.exch(collection, large_index, len(collection)-1) # 习题2.3.17,设置右侧哨兵
+        # min_index = collection.index(min(collection)) # 由于python索引可以为负，左端哨兵无法设置
+        # self.exch(collection, min_index, 0)
+
+        self._sort2(collection, 0, len(collection)-1)
+
+    def _sort2(self, a, lo, hi):
+        if hi <= lo + 7:  # 小数组改用插入排序
+            Insertion().sort_outer(a, lo, hi)
+            return
+        # if hi > lo:
+        j = self._partition2(a, lo, hi)
+        self._sort2(a, lo, j-1)
+        self._sort2(a, j+1, hi)
+
+    def _partition2(self, a, lo, hi):
+        i, j = lo, hi+1
+        v = a[lo] # 此处也可以随机选择一个索引的值作为v，需和lo交换该索引，即在局部随机选取v，而不在最外层。保持随机性
+        while True:
+            i += 1
+            # while self.less(a[i], v):
+            while self.less_not_eql(a[i], v): # 避免切分元素值重复，左侧扫描应该在大于等于切分值停下
+                i += 1
+
+            j -= 1
+            # while self.less(v, a[j]):
+            while self.less_not_eql(v, a[j]): # 避免切分元素值重复，右侧扫描应该在小于等于切分值停下
+                if j == lo:  # 由于python索引可以为负，左端哨兵无法设置
+                    break
+                j -= 1
+
+            if i >= j:
+                break  # 根据切分数组的值v已经找到v值应该在的索引j (因为i>=j，因此v值取j正好在i索引值之前，保证左右有序)
+            self.exch(a, i, j) # 循环走到这里说明有类似局部极值点的情况，未成功切分数组，需要逐个交换索引，继续循环
+
+        self.exch(a, lo, j) # 更新v值的最终索引
+
+        return j
+
+    # TODO 三取样切分 习题2.3.18
+    def sort3(self, collection):
+        random.shuffle(collection)
+        large_index = collection.index(max(collection))
+        self.exch(collection, large_index, len(collection) - 1)  # 习题2.3.17,设置右侧哨兵
+
+        self._sort3(collection, 0, len(collection)-1)
+
+    def _sort3(self, a, lo, hi):
+        if hi <= lo + 7:  # 小数组改用插入排序
+            Insertion().sort_outer(a, lo, hi)
+            return
+        j = self._partition3(a, lo, hi)
+        self._sort3(a, lo, j-1)
+        self._sort3(a, j+1, hi)
+
+    def _partition3(self, a, lo, hi):
+        setIndex = set()
+        while len(setIndex) != 3:
+            setIndex.add(random.randint(lo, hi))
+        values = [a[q] for q in setIndex]
+        Insertion().sort(values)
+        medium = lo
+        for k in setIndex:
+            if a[k] == values[1]:
+                medium = k
+        self.exch(a, lo, medium)
+
+        i, j = lo, hi+1
+        v = a[lo]
+        while True:
+            i += 1
+            while i < hi and self.less_not_eql(a[i], v):
+                i += 1
+            j -= 1
+            while j > lo and self.less_not_eql(v, a[j]):
+                j -= 1
+
+            if i >= j:
+                break
+            self.exch(a, i, j)
+
+        self.exch(a, lo, j)
+        return j
+
+    def sort4(self, collection):
+        """
+        三向切分，将数组分成大于、小于、等于切分元素的三部分
+        对于重复元素少的情况比标准二分快排多使用了很多次交换
+        见下面sort5 快速三向切分 习题2.3.22
+        """
+        random.shuffle(collection)
+        large_index = collection.index(max(collection))
+        self.exch(collection, large_index, len(collection) - 1)  # 习题2.3.17,设置右侧哨兵
+
+        self._sort4(collection, 0, len(collection) - 1)
+
+    def _sort4(self, a, lo, hi):
+        # if hi <= lo + 7:
+        #     Insertion().sort_outer(a, lo, hi)
+        if hi <= lo:
+            return
+        lt, i, gt = lo, lo+1, hi
+
+        v = a[lo]
+        while i <= gt:
+            if a[i] < v:
+                self.exch(a, lt, i)
+                lt += 1
+                i += 1
+            elif a[i] > v:
+                self.exch(a, i, gt)
+                gt -= 1
+            else:
+                i += 1
+
+        self._sort4(a, lo, lt - 1)
+        self._sort4(a, gt + 1, hi)
+
+    def sort5(self, collection):
+        self._sort5(collection, 0, len(collection)-1)
+
+    def _sort5(self, a, lo, hi):
+        N = hi - lo + 1
+        insertion_sort_cutoff = 8
+        MEDIAN_OF_3_CUTOFF = 40
+        if(N <= insertion_sort_cutoff):
+            Insertion().sort_outer(a, lo, hi)
+            return
+        elif N <= MEDIAN_OF_3_CUTOFF:
+            m = self.median3(a, lo, lo+N//2, hi)
+            self.exch(a, m, lo)
+        else:
+            eps = N//8
+            mid = lo + N // 2
+            m1 = self.median3(a, lo, lo+eps, lo+eps+eps)
+            m2 = self.median3(a, mid-eps, mid, mid+eps)
+            m3 = self.median3(a, hi-eps-eps, hi-eps, hi)
+            ninther = self.median3(a, m1, m2, m3)
+            self.exch(a, ninther, lo)
+
+        i, j = lo, hi+1
+        p, q = lo, hi+1
+
+        v = a[lo]
+        while True:
+            i += 1
+            while i < hi and self.less_not_eql(a[i], v):
+                i += 1
+
+            j -= 1
+            while j > lo and self.less_not_eql(v, a[i]):
+                j -= 1
+
+            if i == j and a[i] == v:
+                p += 1
+                self.exch(a, p, i)
+
+            if i >= j:
+                break
+            self.exch(a, i, j)
+            if a[i] == v:
+                p += 1
+                self.exch(a, p, i)
+            if a[j] == v:
+                q -= 1
+                self.exch(a, q, j)
+
+        i = j + 1
+        for k in range(lo, p+1):
+            self.exch(a, k, j)
+            j -= 1
+        for k in range(hi, q-1, -1):
+            self.exch(a, k, i)
+            i += 1
+
+        self._sort5(a, lo, j)
+        self._sort5(a, i, hi)
+
+    def median3(self, a, i, j, k):
+        pass
 
 

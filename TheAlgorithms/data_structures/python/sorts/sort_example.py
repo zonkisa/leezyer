@@ -24,6 +24,10 @@ class Example:
         # return le(v, w)
 
     @staticmethod
+    def less_not_eql(v, w):
+        return v < w
+
+    @staticmethod
     def exch(collection, i, j):
         tmp = collection[i]
         collection[i] = collection[j]
