@@ -26,6 +26,10 @@ if __name__ == '__main__':
     print(bst.size())
     print(bst.select(5))
     print(bst.rank(1))
-
+    print(bst.deleteMin())
+    print(bst)
+    print(bst.delete(7))
+    print(bst)
+    print(bst.findKeys(0, 7).queue)
 
 

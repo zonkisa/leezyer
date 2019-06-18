@@ -1,5 +1,6 @@
 # coding: utf-8
 from __future__ import print_function
+from queue import Queue
 
 
 class Node:
@@ -21,6 +22,14 @@ class BinarySearchTree:
     """
     def __init__(self):
         self.root = Node(None, None, 0)
+
+    def min(self):
+        return self.getMinNode(self.root).key
+
+    def getMinNode(self, node):
+        if node.left is None or node.left.key is None:
+            return node
+        return self.getMinNode(node.left)
 
     def size(self):
         return self.getSize(self.root)
@@ -207,8 +216,58 @@ class BinarySearchTree:
 
     # TODO
     def deleteMin(self):
-        pass
+        self.root = self.__deleteMin(self.root)
 
+    def __deleteMin(self, node):
+        """
+        注意node.left = self.__deleteMin(node.left)，这个式子对delete模式有效 ！！！
+        当__deleteMin返回为空时，即node.left.left is None，且将node.left置为空结点，
+        此时已经找到最小结点并删除，此时要即时更新最小结点的父结点信息N，此时更新信息为自底向上
+        """
+        if node.left is None or node.left.key is None:
+            return node.right
+        node.left = self.__deleteMin(node.left)
+        node.N = self.getSize(node.left) + self.getSize(node.right) + 1
+        return node
+
+    def delete(self, key):
+        self.root = self.__delete(self.root, key)
+
+    def __delete(self, node, key):
+        if node is None or node.key is None:
+            return None
+        if key < node.key:
+            node.left = self.__delete(node.left, key)
+        elif key > node.key:
+            node.right = self.__delete(node.right, key)
+        else:
+            if node.right is None or node.right.key is None:
+                return node.left # 左右子结点若各有空值情况，则将另一侧子结点续上，即target.side = target.side.side
+            if node.left is None or node.left.key is None:
+                return node.right
+            tmpNode = node
+            node = self.getMinNode(node.right)
+            node.right = self.__deleteMin(tmpNode.right)
+            node.left = tmpNode.left
+        # 在当前__delete周期内更新node.N信息
+        node.N = self.getSize(node.left) + self.getSize(node.right) + 1
+        return node
+
+    def findKeys(self, lo_key, hi_key):
+        queue = Queue()
+        self.__findKeys(self.root, queue, lo_key, hi_key)
+        return queue
+
+    def __findKeys(self, node, queue, lo_key, hi_key):
+        if node is None or node.key is None:
+            return
+        if lo_key < node.key:
+            self.__findKeys(node.left, queue, lo_key, hi_key)
+        if lo_key <= node.key <= hi_key:
+            queue.put(node.key)
+            # queue.enqueue(node.key)
+        if hi_key > node.key:
+            self.__findKeys(node.right, queue, lo_key, hi_key)
 
     def __str__(self):
         keys, vals = [], []
@@ -226,3 +285,9 @@ class BinarySearchTree:
         vals.append(node.val)
         self.midTraverse(node.right, keys, vals)
 
+    """
+    在一棵二叉查找树中，所有操作在最坏情况下所需的时间都和树的高度成正比
+    随机键构造的二叉查找树的平均高度为树中结点树的对数级别，接近2.99lgN，不随机则参考平衡二叉树
+    因此，二叉查找树的基本实现的性能优劣，依赖于其中的键的分布是否足够随机以消除长路径
+    顺序或逆序插入则会出现这种情况（此时树为"单叉树"）
+    """
