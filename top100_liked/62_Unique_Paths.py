@@ -41,7 +41,35 @@ class Solution:
 		return rec(m, n)
 
 
-print(Solution().uniquePaths(3, 2))
-print(Solution().uniquePaths1(3, 2))
-print(Solution().uniquePaths2(3, 2))
-print(Solution().uniquePaths3(3, 2))
+# print(Solution().uniquePaths(3, 2))
+# print(Solution().uniquePaths1(3, 2))
+# print(Solution().uniquePaths2(3, 2))
+# print(Solution().uniquePaths3(3, 2))
+
+
+def sqrtX(x):
+	l, r = 0, x + 1
+	while l < r:
+		m = l + (r - l) // 2
+		if m * m > x:
+			r = m
+		else:
+			l = m + 1
+	return l - 1
+
+
+# Binary search
+def mySqrt(x):
+	l, r = 0, x
+	while l <= r:
+		mid = l + (r - l) // 2
+		if mid * mid <= x < (mid + 1) * (mid + 1):
+			return mid
+		elif x < mid * mid:
+			r = mid
+		else:
+			l = mid + 1
+
+
+print(mySqrt(8))
+print(sqrtX(8))
