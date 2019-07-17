@@ -20,7 +20,7 @@ class Solution:
 			self.dfs(candidates, target-candidates[i], i, path+[candidates[i]], res)
 
 	# 按返回路径的大小返回
-	def combinationSumBFS(self, candidates, target):
+	def combinationSumDFS(self, candidates, target):
 		res = []
 		candidates.sort()
 		for n in range(1, target // candidates[0] + 1):
@@ -46,5 +46,5 @@ class Solution:
 
 if __name__ == "__main__":
 	print(Solution().combinationSum([2, 3, 5, 7], 7))
-	print(Solution().combinationSumBFS([2, 3, 6, 7], 7))
+	print(Solution().combinationSumDFS([2, 3, 6, 7], 7))
 	pass
