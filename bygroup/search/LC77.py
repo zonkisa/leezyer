@@ -7,7 +7,7 @@ class Solution:
 
 	def dfs1(self, n, k, start, depth, path, res):
 		if depth == k:
-			res.append(path)
+			res.append(path[:])
 			return
 		for i in range(start, n):
 			path.append(i)
