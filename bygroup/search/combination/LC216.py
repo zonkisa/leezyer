@@ -26,4 +26,3 @@ class Solution:
 if __name__ == '__main__':
 	print(Solution().combinationSum3(3, 9))
 	print(Solution().combinationSum3(3, 7))
-	pass

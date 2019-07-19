@@ -37,4 +37,4 @@ class Solution:
 
 if __name__ == '__main__':
 	print(Solution().subsetsWithDup([1, 2, 2]))
-	pass
+

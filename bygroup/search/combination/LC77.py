@@ -23,6 +23,6 @@ class Solution:
 		if depth == k:
 			res.append(path)
 			return
-		for i in range(start, n - (k - len(path)) + 1):
+		for i in range(start, n - (k - len(path)) + 1):	# 进行剪枝, 更快
 			self.dfs2(n, k, i + 1, depth + 1, path + [i], res)
 
