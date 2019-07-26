@@ -45,3 +45,4 @@ class Solution:
 
 print(Solution().letterCasePermutation("a1b2"))
 print(Solution().letterCasePermutation2("a1b2"))
+
