@@ -18,4 +18,4 @@ class Solution:
 			self.dfs(candidates, target-candidates[i], i+1, path+[candidates[i]], res)
 
 
-print(Solution().combinationSum2([10,1,2,7,6,1,5], 8))
+print(Solution().combinationSum2([10, 1, 2, 7, 6, 1, 5], 8))
